@@ -4,9 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = 'login.html';
         return;
     }
-    // GANTI IP ADDRESS INI DENGAN IP NODE-RED ANDA
     const NODE_RED_URL = 'https://wastelog-nodered-services.up.railway.app';
-    const WEBSOCKET_URL = 'https://wastelog-nodered-services.up.railway.app/ws/realtimelocation';
+    const WEBSOCKET_URL = 'wss://wastelog-nodered-services.up.railway.app/ws/websocket';
     const DEVICE_ID = 'gps_wastelog_01';
 
     // --- ELEMENTS ---
@@ -21,9 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const geofenceForm = document.getElementById('geofenceForm');
     const cancelGeofenceBtn = document.getElementById('cancelGeofence');
     const geofenceTableBody = document.querySelector('#geofenceTable tbody');
-    const eventPopover = document.getElementById('event-popover'); // Pastikan elemen ini ada di HTML Anda
+    const eventPopover = document.getElementById('event-popover');
     
-    // Elemen untuk kartu hasil pengukuran manual
     const manualMeasureResultCard = document.getElementById('manualMeasureResultCard');
     const manualVolumeEl = document.getElementById('manualVolume');
     const manualDistanceEl = document.getElementById('manualDistance');
@@ -41,48 +39,35 @@ document.addEventListener("DOMContentLoaded", () => {
     let vehicleMarker = L.marker([0, 0], { icon: vehicleIcon }).addTo(map).bindPopup("Lokasi Truk Sampah");
     let geofenceLayers = L.layerGroup().addTo(map);
 
+    // --- Simpan teks tombol asli di luar event listener ---
+    const originalManualButtonHTML = manualMeasureBtn.innerHTML;
+
     // --- FUNGSI-FUNGSI ---
-    const fetchInitialVehicleLocation = async () => {
-        try {
-            const response = await fetch(`${NODE_RED_URL}/api/realtimelocation?deviceId=${DEVICE_ID}`);
-            if (!response.ok) throw new Error(`Server Response: ${response.status}`);
-            const data = await response.json();
-            if (data.latitude && data.longitude) {
-                const initialLatLng = [data.latitude, data.longitude];
-                vehicleMarker.setLatLng(initialLatLng);
-                map.setView(initialLatLng, 16);
-            }
-        } catch (error) {
-            console.error("Gagal mengambil lokasi awal:", error);
-        }
-    };
     
     const connectWebSocket = () => {
         const ws = new WebSocket(WEBSOCKET_URL);
         ws.onopen = () => console.log('WebSocket terhubung!');
         ws.onmessage = (event) => {
+            console.log("Menerima data dari WebSocket:", event.data);
             try {
                 const data = JSON.parse(event.data);
-                if (data.deviceId !== DEVICE_ID) return;
+                const payload = data.payload || data;
 
-                // --- [MODIFIKASI] Menangani data lokasi dari Geofence Engine ---
-                // Flow Node-RED yang baru mengirimkan lokasi dalam format { location: { lat: ..., lon: ... } }
-                if (data.location && data.location.lat && data.location.lon) {
-                    const newLatLng = [data.location.lat, data.location.lon];
+                if (payload.deviceId !== DEVICE_ID) return;
+
+                if (payload.location && payload.location.lat && payload.location.lon) {
+                    const newLatLng = [payload.location.lat, payload.location.lon];
                     if(vehicleMarker) {
                         vehicleMarker.setLatLng(newLatLng);
                         map.panTo(newLatLng);
                     }
                 }
                 
-                // --- [TETAP] Menangani data pengukuran manual ---
-                // Logika ini tetap dipertahankan, dengan asumsi Node-RED akan meneruskan
-                // hasil pengukuran manual ke WebSocket.
-                if (data.source === 'manual' && data.event === 'VOLUME_MEASUREMENT') {
-                    console.log('Menerima update pengukuran manual via WebSocket:', data);
-                    manualVolumeEl.textContent = `${data.calculatedVolume_liter.toFixed(2)} Liter`;
-                    manualDistanceEl.textContent = `${data.distance_cm} cm`;
-                    manualTimestampEl.textContent = new Date(data.timestamp).toLocaleString('id-ID');
+                if (payload.source === 'manual' && payload.event === 'VOLUME_MEASUREMENT') {
+                    console.log('Menerima update pengukuran manual via WebSocket:', payload);
+                    manualVolumeEl.textContent = `${payload.calculatedVolume_m3.toFixed(4)} m³`;
+                    manualDistanceEl.textContent = `${payload.distance_cm} cm`;
+                    manualTimestampEl.textContent = new Date(payload.timestamp).toLocaleString('id-ID');
                     manualMeasureResultCard.style.display = 'block';
                 }
 
@@ -97,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
-    // --- [TIDAK BERUBAH] Fungsi untuk Geofence ---
     const renderGeofences = (geofences) => {
         geofenceLayers.clearLayers();
         geofenceTableBody.innerHTML = '';
@@ -140,7 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
         geofenceFormContainer.classList.remove('hidden');
     };
     
-    // --- [TIDAK BERUBAH] EVENT LISTENERS (Logout, Geofence, dll) ---
     sidebarToggle.addEventListener('click', () => {
         dashboardContainer.classList.toggle('sidebar-closed');
         setTimeout(() => map.invalidateSize(), 300); 
@@ -151,37 +134,45 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = 'index.html'; 
     });
 
-    manualMeasureBtn.addEventListener('click', async () => {
+    manualMeasureBtn.addEventListener('click', () => {
         if (!confirm('Anda yakin ingin memicu pengukuran volume manual?')) return;
         
-        const originalButtonText = manualMeasureBtn.innerHTML;
         manualMeasureBtn.disabled = true;
         manualMeasureBtn.innerHTML = `<i class="fas fa-spinner fa-spin fa-fw"></i> <span class="nav-text">Mengirim...</span>`;
         manualMeasureResultCard.style.display = 'none';
 
-        try {
-            const response = await fetch(`${NODE_RED_URL}/api/measure`, { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ trigger: true, deviceId: DEVICE_ID }) 
-            });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            if (response.status !== 202) {
+        fetch(`${NODE_RED_URL}/api/measure`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trigger: true, deviceId: DEVICE_ID }),
+            signal: controller.signal
+        })
+        .then(response => {
+            if (!response.ok && response.status !== 202) {
                 throw new Error(`Server menolak perintah. Status: ${response.status}`);
             }
-            
             manualMeasureBtn.innerHTML = `<i class="fas fa-check"></i> <span class="nav-text">Terkirim</span>`;
-
-        } catch (error) { 
-            console.error('Gagal memicu pengukuran manual:', error); 
-            alert(`Gagal memicu pengukuran manual. \n\nError: ${error.message}`);
-            manualMeasureBtn.innerHTML = originalButtonText;
-        } finally {
+        })
+        .catch(error => { 
+            if (error.name === 'AbortError') {
+                console.log("Permintaan timeout, tetapi perintah dianggap terkirim.");
+                manualMeasureBtn.innerHTML = `<i class="fas fa-check"></i> <span class="nav-text">Terkirim</span>`;
+            } else {
+                console.error('Gagal memicu pengukuran manual:', error); 
+                alert(`Gagal memicu pengukuran manual. \n\nError: ${error.message}`);
+                manualMeasureBtn.innerHTML = originalManualButtonHTML;
+            }
+        })
+        .finally(() => {
+            clearTimeout(timeoutId);
             setTimeout(() => {
                 manualMeasureBtn.disabled = false;
-                manualMeasureBtn.innerHTML = originalButtonText;
+                manualMeasureBtn.innerHTML = originalManualButtonHTML;
             }, 4000);
-        }
+        });
     });
 
     addGeofenceBtn.addEventListener('click', () => showGeofenceForm());
@@ -242,39 +233,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     
-    // --- [MODIFIKASI] KALENDER SETUP & LOGIKA ---
-    
-    // Fungsi bantuan untuk format
     const formatTime = (dateStr) => dateStr ? new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g,':') : '-';
     const formatDuration = (seconds) => (seconds === null || seconds === undefined) ? '-' : `${Math.round(seconds / 60)} menit`;
     
-    // [BARU] Fungsi bantuan untuk menampilkan detail volume di popover
     const formatVolumeDetails = (visit) => {
         if (!visit || !visit.measurement) return '<li class="list-group-item">Data volume tidak lengkap.</li>';
         
-        const initial = visit.measurement.initialVolume_liter;
-        const final = visit.measurement.finalVolume_liter;
-        const collected = visit.collectedVolume_liter;
+        const initial = visit.measurement.initialVolume_m3;
+        const final = visit.measurement.finalVolume_m3;
+        const collected = visit.collectedVolume_m3;
         
         if (collected == null || initial == null || final == null) {
             return '<li class="list-group-item">Data volume tidak tersedia.</li>';
         }
 
         return `
-            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Volume Awal</span> <span class="badge bg-secondary rounded-pill">${initial.toFixed(2)} L</span></li>
-            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Volume Akhir</span> <span class="badge bg-secondary rounded-pill">${final.toFixed(2)} L</span></li>
-            <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><strong>Volume Terkumpul</strong> <strong>${collected.toFixed(2)} L</strong></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Volume Awal</span> <span class="badge bg-secondary rounded-pill">${initial.toFixed(4)} m³</span></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Volume Akhir</span> <span class="badge bg-secondary rounded-pill">${final.toFixed(4)} m³</span></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><strong>Volume Terkumpul</strong> <strong>${collected.toFixed(4)} m³</strong></li>
         `;
     };
     
-    // [MODIFIKASI] Inisialisasi FullCalendar dengan eventClick untuk popover
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'id',
         headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek,listWeek' },
         buttonText: { dayGridMonth: 'Bulan', dayGridWeek: 'Minggu', listWeek: 'Daftar' },
         eventClick: (info) => {
-            info.jsEvent.preventDefault(); // Mencegah browser mengikuti link (jika ada)
+            info.jsEvent.preventDefault();
             
             const visit = info.event.extendedProps;
             const popoverContent = `
@@ -293,23 +279,20 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             
             eventPopover.innerHTML = popoverContent;
-            // Posisikan popover dekat dengan event yang diklik
             const rect = info.el.getBoundingClientRect();
             eventPopover.style.left = `${rect.left + window.scrollX}px`;
             eventPopover.style.top = `${rect.bottom + window.scrollY}px`;
             eventPopover.style.display = 'block';
         },
         eventContent: (arg) => {
-            // [BARU] Menampilkan volume terkumpul langsung di event kalender
-            const volume = arg.event.extendedProps.collectedVolume_liter;
+            const volume = arg.event.extendedProps.collectedVolume_m3;
             if (volume !== null && volume !== undefined) {
                 let eventHtml = `<div class="fc-event-main-frame">
                     <div class="fc-event-title-container">
                         <div class="fc-event-title fc-sticky">${arg.event.title}</div>
                     </div>`;
-                // Tampilkan volume hanya di tampilan bulan dan minggu untuk menghindari kepadatan
                 if(arg.view.type === 'dayGridMonth' || arg.view.type === 'dayGridWeek'){
-                     eventHtml += `<div class="fc-event-volume">${volume.toFixed(1)} L</div>`;
+                     eventHtml += `<div class="fc-event-volume">${volume.toFixed(3)} m³</div>`;
                 }
                 eventHtml += `</div>`;
                 return { html: eventHtml };
@@ -318,7 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     calendar.render();
 
-    // [BARU] Listener untuk menyembunyikan popover saat mengklik di luar
     document.addEventListener('click', function(e) {
         if (eventPopover && eventPopover.style.display === 'block') {
             if (!eventPopover.contains(e.target) && !e.target.closest('.fc-event')) {
@@ -327,26 +309,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-
-    // --- [MODIFIKASI TOTAL] Logika Pengambilan Data Riwayat ---
-    // Logika ini disederhanakan secara signifikan karena flow Node-RED yang baru
-    // menyimpan data sesi kunjungan yang sudah lengkap dalam satu dokumen.
     const fetchHistoryAndRender = async () => {
         try {
-            // Asumsi: Endpoint /api/history sekarang mengambil data dari koleksi 'visit_logs'.
             const response = await fetch(`${NODE_RED_URL}/api/history?deviceId=${DEVICE_ID}`);
             if (!response.ok) throw new Error("Gagal mengambil data histori");
 
             const historyLogs = await response.json();
+            if (historyLogs.error) throw new Error(historyLogs.error);
             
             const calendarEvents = historyLogs
-                // Filter hanya untuk sesi kunjungan (visit_session) yang sudah selesai (completed)
                 .filter(log => log.deviceId === DEVICE_ID && log.logType === 'VISIT_SESSION' && log.status === 'COMPLETED')
                 .map(visit => ({
                     title: visit.areaName || 'Kunjungan Area',
-                    start: visit.entryTime, // Waktu mulai event
-                    end: visit.exitTime,     // Waktu selesai event (opsional, tapi bagus untuk tampilan)
-                    extendedProps: visit     // Simpan semua detail kunjungan untuk ditampilkan di popover
+                    start: visit.entryTime,
+                    end: visit.exitTime,
+                    extendedProps: visit
                 }));
                 
             calendar.getEventSources().forEach(source => source.remove());
@@ -354,19 +331,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
             console.error('Terjadi error saat memproses data histori:', error);
-            alert('Gagal memuat data riwayat kunjungan.');
+            alert(`Gagal memuat data riwayat kunjungan.\n\nError: ${error.message}`);
         }
     };
      
-    // --- INISIALISASI DASHBOARD ---
     const initializeDashboard = () => {
-        fetchInitialVehicleLocation(); 
-        connectWebSocket();
+        connectWebSocket(); // Langsung hubungkan WebSocket
         fetchAndDisplayGeofences().then(() => {
-            // Panggil riwayat setelah data geofence dimuat untuk memastikan nama area tersedia
             fetchHistoryAndRender(); 
         });
-        // Refresh data riwayat setiap menit
         setInterval(fetchHistoryAndRender, 60000); 
     };
 

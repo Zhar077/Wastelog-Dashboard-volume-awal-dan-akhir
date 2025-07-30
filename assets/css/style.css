@@ -1,22 +1,21 @@
 /* =================================================================== */
-/* WasteLog IoT - Full Responsive Stylesheet 		     */
+/* WasteLog IoT - Full Responsive Stylesheet (Revised)     */
 /* =================================================================== */
 
-/* --- Variabel Global & Reset --- */
+/* --- Variabel Global & Reset (Sesuai Palet Warna Anda) --- */
 :root {
-    --primary-color: #2E7D32; /* Hijau tua */
-    --primary-light: #4CAF50; /* Hijau lebih terang */
+    --primary-color: #2E7D32; /* Hijau Tua */
+    --primary-light: #4CAF50; /* Hijau Terang */
     --secondary-color: #6c757d;
-    --accent-color: #FFC107;
     --danger-color: #d32f2f;
     --bg-color: #F7F9FC;
     --card-bg: #FFFFFF;
     --text-color: #333;
     --text-light: #FFF;
     --border-color: #E0E0E0;
-    --sidebar-bg: #1B262C;
+    --sidebar-bg: #1B262C; /* Biru Gelap dari gambar */
     --sidebar-text: #BBE1FA;
-    --sidebar-active: #0F4C75;
+    --sidebar-active: #0F4C75; /* Biru lebih gelap untuk hover */
 }
 
 * {
@@ -43,38 +42,13 @@ body, html {
     font-weight: bold;
     transition: all 0.2s ease-in-out;
 }
-
-.btn-primary {
-    background-color: var(--primary-light);
-    color: var(--text-light);
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-color);
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color);
-    color: var(--text-light);
-}
-
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
-
-.btn-danger {
-    background-color: var(--danger-color);
-    color: var(--text-light);
-}
-
-.btn-danger:hover {
-    filter: brightness(1.2);
-}
-
-.btn-action {
-    background-color: var(--primary-color);
-    color: var(--text-light);
-}
+.btn-primary { background-color: var(--primary-light); color: var(--text-light); }
+.btn-primary:hover { background-color: var(--primary-color); }
+.btn-secondary { background-color: var(--secondary-color); color: var(--text-light); }
+.btn-secondary:hover { background-color: #5a6268; }
+.btn-danger { background-color: var(--danger-color); color: var(--text-light); }
+.btn-danger:hover { filter: brightness(1.2); }
+.btn-action { background-color: var(--primary-color); color: var(--text-light); }
 
 .card {
     background-color: var(--card-bg);
@@ -83,7 +57,6 @@ body, html {
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     margin-bottom: 20px;
 }
-
 .card h3 {
     margin-bottom: 15px;
     color: var(--primary-color);
@@ -92,142 +65,31 @@ body, html {
     gap: 10px;
 }
 
-/* --- Halaman Landing (index.html) --- */
-.landing-header nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 5%;
-    background: var(--card-bg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+/* --- Halaman Landing & Login (Tidak Berubah) --- */
+.landing-header nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: var(--card-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.landing-header .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); }
+.hero { display: flex; align-items: center; padding: 4rem 5%; gap: 2rem; }
+.hero-content { flex: 1; }
+.hero-content h1 { font-size: 2.8rem; margin-bottom: 1rem; }
+.hero-content p { font-size: 1.1rem; margin-bottom: 2rem; }
+.hero-image { flex: 1; text-align: center; }
+.hero-image img { max-width: 100%; height: auto; border-radius: 8px; }
+.features { padding: 4rem 5%; text-align: center; }
+.features h2 { font-size: 2rem; margin-bottom: 2rem; }
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+.feature-card { background: var(--card-bg); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.feature-card i { font-size: 3rem; color: var(--primary-light); margin-bottom: 1rem; }
+.landing-footer { text-align: center; padding: 2rem; background: var(--sidebar-bg); color: var(--text-light); }
+.login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.login-form { width: 100%; max-width: 400px; padding: 2rem; background: var(--card-bg); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.login-form h2 { text-align: center; margin-bottom: 1.5rem; color: var(--primary-color); }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 5px; }
+.form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; }
+.login-form .btn { width: 100%; margin-top: 1rem; }
+.error-message { color: var(--danger-color); text-align: center; margin-top: 1rem; height: 1.2em; }
 
-.landing-header .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.hero {
-    display: flex;
-    align-items: center;
-    padding: 4rem 5%;
-    gap: 2rem;
-}
-
-.hero-content {
-    flex: 1;
-}
-
-.hero-content h1 {
-    font-size: 2.8rem;
-    margin-bottom: 1rem;
-}
-
-.hero-content p {
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-}
-
-.hero-image {
-    flex: 1;
-    text-align: center;
-}
-
-.hero-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-}
-
-.features {
-    padding: 4rem 5%;
-    text-align: center;
-}
-
-.features h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-}
-
-.feature-card {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.feature-card i {
-    font-size: 3rem;
-    color: var(--primary-light);
-    margin-bottom: 1rem;
-}
-
-.landing-footer {
-    text-align: center;
-    padding: 2rem;
-    background: var(--sidebar-bg);
-    color: var(--text-light);
-}
-
-/* --- Halaman Login (login.html) --- */
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-}
-
-.login-form {
-    width: 100%;
-    max-width: 400px;
-    padding: 2rem;
-    background: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.login-form h2 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: var(--primary-color);
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-}
-
-.login-form .btn {
-    width: 100%;
-    margin-top: 1rem;
-}
-
-.error-message {
-    color: var(--danger-color);
-    text-align: center;
-    margin-top: 1rem;
-    height: 1.2em;
-}
-
-/* --- Halaman Dashboard --- */
+/* --- [PERBAIKAN] Halaman Dashboard --- */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -242,23 +104,20 @@ body, html {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
 }
-
 .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
 }
-
 .sidebar-title {
     font-size: 1.8rem;
     color: var(--text-light);
     opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease, width 0.2s ease;
+    white-space: nowrap;
 }
-
 .sidebar-toggle {
     background: none;
     border: none;
@@ -267,15 +126,8 @@ body, html {
     cursor: pointer;
     transition: transform 0.3s ease;
 }
-
-.sidebar nav ul {
-    list-style: none;
-}
-
-.sidebar nav ul li {
-    margin-bottom: 10px;
-}
-
+.sidebar nav ul { list-style: none; padding: 0; }
+.sidebar nav ul li { margin-bottom: 10px; }
 .sidebar nav a, .sidebar nav button {
     display: flex;
     align-items: center;
@@ -290,23 +142,21 @@ body, html {
     font-size: 1rem;
     cursor: pointer;
     text-align: left;
+    white-space: nowrap;
 }
-
 .sidebar nav .fa-fw {
     margin-right: 15px;
     width: 20px;
 }
-
 .sidebar nav a:hover, .sidebar nav button:hover {
     background-color: var(--sidebar-active);
 }
-
 .sidebar nav a.active {
     background-color: var(--primary-light);
     color: var(--text-light);
 }
 
-/* State Sidebar Tertutup */
+/* [PERBAIKAN] State Sidebar Tertutup */
 .dashboard-grid.sidebar-closed {
     grid-template-columns: 80px 1fr;
 }
@@ -315,6 +165,7 @@ body, html {
     opacity: 0;
     width: 0;
     overflow: hidden;
+    pointer-events: none;
 }
 .dashboard-grid.sidebar-closed .sidebar-toggle {
     transform: rotate(180deg);
@@ -325,22 +176,16 @@ body, html {
     padding: 20px;
     overflow-y: auto;
 }
-
-.main-header {
-    margin-bottom: 20px;
-}
-
+.main-header { margin-bottom: 20px; }
 .content-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
-
 .content-col-left, .content-col-right {
     display: flex;
     flex-direction: column;
 }
-
 #map {
     height: 400px;
     width: 100%;
@@ -348,11 +193,19 @@ body, html {
     margin-bottom: 20px;
 }
 
-/* Geofence Form & Table */
-.form-container.hidden {
-    display: none;
+/* [PERBAIKAN] Geofence Form (Accordion Style) */
+#geofenceFormContainer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out, margin-top 0.5s ease-out, padding-top 0.5s ease-out;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 1px solid transparent; /* Start with transparent border */
+    transition: all 0.5s ease-out;
 }
-#geofenceForm {
+/* State Terbuka */
+#geofenceFormContainer:not(.hidden) {
+    max-height: 500px; /* Nilai besar untuk memastikan form muat */
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid var(--border-color);
@@ -371,6 +224,7 @@ body, html {
     margin-top: 15px;
     display: flex;
     gap: 10px;
+    justify-content: flex-end;
 }
 .table-wrapper {
     margin-top: 15px;
@@ -400,27 +254,9 @@ body, html {
     font-size: 1rem;
 }
 
-/* Kalender */
-.card-full-height {
-    height: 100%;
-}
-#calendar {
-    flex-grow: 1;
-    min-height: 600px;
-}
-.event-pill {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 0.8em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.event-icon {
-    margin-right: 4px;
-}
+/* Kalender & Popover */
+.card-full-height { height: 100%; }
+#calendar { flex-grow: 1; min-height: 600px; }
 .event-popover {
     position: absolute;
     z-index: 1000;
@@ -430,52 +266,54 @@ body, html {
     box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     min-width: 250px;
 }
-.event-popover-title {
+.popover-header {
     font-weight: bold;
     padding: 10px 15px;
-    background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.popover-body ul {
+    list-style: none; /* Menghilangkan bullet points */
+    padding: 0;
+    margin: 0;
+}
+.popover-body li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 15px;
     border-bottom: 1px solid var(--border-color);
 }
-.event-popover-body {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.popover-body li:last-child {
+    border-bottom: none;
 }
-.event-popover-body div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.list-group-item-success {
+    background: #e8f5e9;
+    font-weight: bold;
 }
 .fc-daygrid-day.fc-day-today {
     background: rgba(46, 125, 50, 0.08) !important;
 }
 
 /* --- Media Queries untuk Responsivitas --- */
-
-/* Tablet & Mobile */
 @media (max-width: 1024px) {
     .content-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
-    .hero {
-        flex-direction: column;
-        text-align: center;
-    }
-    .features-grid {
-        grid-template-columns: 1fr;
-    }
+    .hero { flex-direction: column; text-align: center; }
+    .features-grid { grid-template-columns: 1fr; }
 
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        display: block; /* Hapus grid, elemen akan menumpuk */
     }
     .sidebar {
         width: 100%;
         height: auto;
+        position: relative;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
@@ -484,35 +322,17 @@ body, html {
     .sidebar-header {
         margin-bottom: 0;
     }
+    /* Sembunyikan navigasi asli */
     .sidebar nav {
-        position: fixed;
-        top: 60px; /* Sesuaikan dengan tinggi header */
-        left: -100%;
-        width: 250px;
-        height: 100%;
-        background: var(--sidebar-bg);
-        padding-top: 20px;
-        transition: left 0.3s ease;
-        z-index: 100;
+        display: none;
     }
-    .sidebar nav.open {
-        left: 0;
-    }
+    /* Tampilkan tombol toggle mobile */
     .sidebar-toggle {
-        display: block; /* Selalu tampilkan di mobile */
+        display: block;
     }
-    .dashboard-grid.sidebar-closed .sidebar {
-        width: 100%;
-    }
-    /* Simple mobile nav - remove sidebar toggle logic, just stack */
-    .dashboard-grid { grid-template-columns: 1fr; }
-    .sidebar { position: relative; width: 100%; }
-    .nav-text { display: none; } /* Hide text for icon-only buttons */
-    .sidebar nav ul { display: flex; gap: 10px; }
-    .sidebar nav ul li { margin-bottom: 0; }
-    .sidebar-title { display: none; }
-    
     .main-content {
+        margin-left: 0;
+        width: 100%;
         padding: 15px;
     }
 }
